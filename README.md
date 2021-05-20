@@ -4,5 +4,5 @@ This script pulls all group memberships for a given OU and highlights accounts w
 
 ## Basic Usage
 ```powershell
-.\Get-ExternalGroupMembers.ps1 -OuName Atlanta -SearchBase 'dc=mycompany,dc=local'
+.\Get-ExternalGroupMembers.ps1 -OUName Atlanta -SearchBase 'dc=mycompany,dc=local'
 ```
