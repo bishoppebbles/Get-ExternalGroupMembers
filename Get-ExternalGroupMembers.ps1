@@ -15,8 +15,9 @@
     Get-ExternalGroupMembers.ps1 -OUName Atlanta -SearchBase 'dc=mycompany,dc=local'
     This command returns any AD account that is not based in the Atlanta OU but has a group membership within the Atlanta OU. The results are output to the 'Output.csv' file.
 .NOTES
-    Version 1.01 - Last Modified 05 MAY 2021
-    Main author: Sam Pursglove
+    Version 1.02 - Last Modified 05 MAY 2021
+    Author: Sam Pursglove
+    Inspiration: Michael Latham
 #>
 
 param 
@@ -43,14 +44,12 @@ param
     [string]$CsvFile = "Output.csv"
 )
 
+
 function Get-Memberships {
-    param (
-        [Parameter(Mandatory)]
-        $groups
-    )
+    $groups = Get-ADGroup -Filter * -SearchBase "ou=$($OUName),$($SearchBase)" -Server "$($globalCatalogServer):$GCPort"
 
     foreach ($group in $groups) {
-        $members = Get-ADGroupMember $group -Recursive | 
+        $members = Get-ADGroupMember $group -Recursive -Server "$($globalCatalogServer):$GCPort" | 
             Where-Object {$_.distinguishedName -notlike "*$($OUName)*" -and $_.objectClass -eq 'user'}
 
         if(-not $IncludeAdminAccounts) {
@@ -68,7 +67,11 @@ function Get-Memberships {
     }
 }
 
+$GCPort = 3268 
+$globalCatalogServer = Get-ADDomainController -discover -service GlobalCatalog
+# $dcServer = Get-ADDomainController  -Discover -DomainName 'eur.state.sbu'
 $output = New-Object System.Collections.ArrayList
-$groups = Get-ADGroup -Filter * -SearchBase "ou=$($OUName),$($SearchBase)"
-Get-Memberships $groups
+
+Get-Memberships
+
 $output | Export-Csv -NoTypeInformation -Path $CsvFile
